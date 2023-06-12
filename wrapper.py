@@ -49,7 +49,6 @@ def main():
     args = parser.parse_args()
     logging.info(f"Running on: {args.device_type}")
 
-
     logging.info("Creating embedding for the documents")
     embeddings = HuggingFaceInstructEmbeddings(
         model_name="hkunlp/instructor-large", model_kwargs={"device": args.device_type}
@@ -57,11 +56,8 @@ def main():
 
     index_name = "flowise"
 
-    logging.info("Creating vectorstore API KEY: {}".format(PINECONE_API_KEY))
-    logging.info("Creating vectorstore ENVIRONMENT: {}".format(PINECONE_ENVIRONMENT))
-
+    logging.info("Consume Pinecone VectorDB ")
     pinecone.init(**PINECONE_SETTINGS)
-
     vectorstore = Pinecone.from_existing_index(
         index_name=index_name,
         embedding=embeddings,
@@ -72,7 +68,6 @@ def main():
     # print(docs)
 
     llm = load_model()
-    chain = load_qa_chain(llm, chain_type="stuff")
     qa = RetrievalQA.from_chain_type(
         llm=llm, chain_type="stuff", retriever=vectorstore.as_retriever()
     )
@@ -86,10 +81,6 @@ def main():
 
             if query == "quit":
                 break
-
-            # Get the answer from the QA
-            # res = get_similar_documents(index, query)
-            # answer = chain.run(input_document=similar_docs, question=query)
 
             answer = qa.run(query=query)
 
